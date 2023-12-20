@@ -1,0 +1,12 @@
+server:
+  port: 5000
+  shutdown: graceful
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:54321/oodachi-querydsl?currentSchema=public
+    username: postgres
+    password: 123456
+  jpa:
+    open-in-view: false
+    show-sql: true

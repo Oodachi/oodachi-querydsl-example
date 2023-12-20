@@ -1,0 +1,13 @@
+services:
+
+  oodachi-querydsl-postgres:
+    container_name: oodachi-querydsl-postgres
+    image: postgres:15.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: oodachi-querydsl
+      TZ: Asia/Shanghai
+    ports:
+      - "54321:5432"
+    restart: on-failure
