@@ -1,0 +1,1 @@
+# oodachi-querydsl-example
