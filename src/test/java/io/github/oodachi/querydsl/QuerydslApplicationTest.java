@@ -1,5 +1,6 @@
 package io.github.oodachi.querydsl;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAProvider;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -72,5 +73,13 @@ class QuerydslApplicationTest {
         JPASQLQuery<?> jpasqlQuery = new JPASQLQuery<>(entityManager, templates);
         List<Post> fetch = jpasqlQuery.select(QPost.post).from(QPost.post).fetch();
         assertFalse(fetch.isEmpty());
+
+        List<PostVO> fetch1 = jpasqlQuery.select(Projections.fields(PostVO.class,
+                        QPost.post.title,
+                        QPost.post.content,
+//                        QPost.post.date,
+                        QPost.post.timestamp))
+                .from(QPost.post).fetch();
+        assertFalse(fetch1.isEmpty());
     }
 }
