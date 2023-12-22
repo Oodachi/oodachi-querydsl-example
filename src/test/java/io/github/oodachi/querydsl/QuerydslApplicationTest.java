@@ -1,27 +1,25 @@
 package io.github.oodachi.querydsl;
 
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPQLTemplates;
 import com.querydsl.jpa.impl.JPAProvider;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.sql.JPASQLQuery;
-import com.querydsl.sql.SQLTemplates;
-import com.querydsl.sql.SQLTemplatesRegistry;
+import com.querydsl.sql.PostgreSQLTemplates;
 import jakarta.persistence.EntityManager;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.sql.DataSource;
-
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 @SpringBootTest
@@ -44,33 +42,43 @@ class QuerydslApplicationTest {
         Assertions.assertNotNull(postRepository);
     }
 
+    @BeforeEach
+    void setUp() {
+        postRepository.deleteAll();
+        for (int i = 0; i < 10; i++) {
+            Post post = new Post();
+            post.setTitle(RandomStringUtils.randomAlphabetic(10));
+            post.setContent(RandomStringUtils.randomAlphabetic(10));
+            post.setDate(LocalDate.now());
+            post.setTimestamp(LocalDateTime.now());
+            postRepository.save(post);
+        }
+    }
+
     @Test
     void testJPQLQuery() {
         JPQLTemplates templates = JPAProvider.getTemplates(entityManager);
         JPAQueryFactory jpaQueryFactory = new JPAQueryFactory(templates, entityManager);
 
-        Post post = new Post();
-        post.setTitle(RandomStringUtils.randomAlphabetic(32));
-        post.setContent(RandomStringUtils.randomAlphabetic(200));
-        post.setDate(LocalDate.now());
-        post.setTimestamp(LocalDateTime.now());
-        postRepository.save(post);
-
-        List<Post> fetch = jpaQueryFactory.select(QPost.post).from(QPost.post).fetch();
-        assertFalse(fetch.isEmpty());
+        List<PostVO> fetch1 = jpaQueryFactory.select(Projections.fields(PostVO.class,
+                        QPost.post.title,
+                        QPost.post.content,
+//                        QPost.post.date,
+                        QPost.post.timestamp))
+                .from(QPost.post).fetch();
+        assertEquals(10, fetch1.size());
     }
 
     @Test
-    void testJPASQLQuery() throws SQLException {
-        var sqlTemplatesRegistry = new SQLTemplatesRegistry();
-        DatabaseMetaData metaData;
-        try (var connection = dataSource.getConnection()) {
-            metaData = connection.getMetaData();
-        }
-        SQLTemplates templates = sqlTemplatesRegistry.getTemplates(metaData);
+    void testJPASQLQuery() {
+        JPASQLQuery<?> jpasqlQuery = new JPASQLQuery<>(entityManager, PostgreSQLTemplates.DEFAULT);
 
-        JPASQLQuery<?> jpasqlQuery = new JPASQLQuery<>(entityManager, templates);
-        List<Post> fetch = jpasqlQuery.select(QPost.post).from(QPost.post).fetch();
-        assertFalse(fetch.isEmpty());
+        List<PostVO> fetch = jpasqlQuery.select(Projections.fields(PostVO.class,
+                        QPost.post.title,
+                        QPost.post.content,
+//                        QPost.post.date,
+                        QPost.post.timestamp))
+                .from(QPost.post).fetch();
+        assertEquals(10, fetch.size());
     }
 }
