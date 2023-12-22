@@ -10,3 +10,8 @@ spring:
   jpa:
     open-in-view: false
     show-sql: true
+  flyway:
+    enabled: true
+    # 执行错误时, 清空数据库重新运行迁移操作, 仅适用于本地开发!!!
+    clean-disabled: false
+    clean-on-validation-error: true
